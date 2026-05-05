@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "Knowledge GPT",
+  "version": "0.5.0",
+  "description": "Save information from supported sites into Notion. Currently focused on YouTube watch pages.",
+  "permissions": ["storage"],
+  "host_permissions": [
+    "https://www.youtube.com/*",
+    "http://localhost/*",
+    "http://127.0.0.1/*"
+  ],
+  "background": {
+    "service_worker": "scripts/background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.youtube.com/*"],
+      "js": [
+        "scripts/content/constants.js",
+        "scripts/content/dom.js",
+        "scripts/content/transcript.js",
+        "scripts/content/state.js",
+        "scripts/content/button.js",
+        "scripts/content/index.js"
+      ],
+      "css": ["styles/content.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "options_page": "pages/options/index.html"
+}

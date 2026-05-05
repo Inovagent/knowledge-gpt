@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Knowledge GPT Settings</title>
+    <link rel="stylesheet" href="../../styles/options.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <h1>Knowledge GPT</h1>
+        <p>Point the extension at your local backend and configure the fields used by the current YouTube capture flow.</p>
+      </section>
+
+      <section class="card">
+        <form id="settings-form">
+          <div class="grid">
+            <label>
+              <span>Backend URL</span>
+              <input id="backendUrl" name="backendUrl" placeholder="http://127.0.0.1:8787" required />
+            </label>
+
+            <label>
+              <span>Notion Database ID</span>
+              <input id="databaseId" name="databaseId" placeholder="Optional if set in backend .env" />
+            </label>
+          </div>
+
+          <h2 class="section-title">Property mapping</h2>
+
+          <div class="grid two">
+            <label>
+              <span>Title property</span>
+              <input id="title" name="title" placeholder="Title" required />
+            </label>
+
+            <label>
+              <span>Video URL property</span>
+              <input id="videoUrl" name="videoUrl" placeholder="URL" />
+            </label>
+
+            <label>
+              <span>Video ID property</span>
+              <input id="videoId" name="videoId" placeholder="Optional" />
+            </label>
+
+            <label>
+              <span>Creator / Source property</span>
+              <input id="channel" name="channel" placeholder="Creator / Source" />
+            </label>
+
+            <label>
+              <span>Last synced at property</span>
+              <input id="lastSyncedAt" name="lastSyncedAt" placeholder="Optional date property" />
+            </label>
+          </div>
+
+          <div class="actions">
+            <button type="submit">Save settings</button>
+            <span class="status" id="status"></span>
+          </div>
+        </form>
+      </section>
+    </main>
+
+    <script src="../../scripts/shared/settings.js"></script>
+    <script src="options.js"></script>
+  </body>
+</html>

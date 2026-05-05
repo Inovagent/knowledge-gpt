@@ -1,0 +1,256 @@
+# Knowledge GPT
+
+Save information from supported sites into Notion without exposing your Notion secret in the browser. Today the project is focused on saving YouTube watch-page transcripts, but the longer-term direction is broader site capture.
+
+This repository currently contains:
+
+- a Chromium Manifest V3 extension that adds a save button on YouTube watch pages
+- a small local Node.js API that writes captured content into Notion
+
+## Why this project exists
+
+Most browser-side Notion integrations force you to put a secret in the extension itself. This project avoids that by sending captured page data to a local backend, which then talks to Notion using your private integration token.
+
+## Features
+
+- Uses a local-first architecture so browser-side code never needs your Notion secret
+- Injects a save button into YouTube's watch-page action bar
+- Opens the transcript panel automatically when needed
+- Extracts transcript text across multiple known YouTube DOM variants
+- Sends transcript data to a local backend for persistence into Notion
+- Creates a new Notion page or recreates an existing one based on your dedupe mapping
+- Preserves a simple load-unpacked development flow
+
+## Repository structure
+
+```text
+.
+├── extension/
+│   ├── manifest.json
+│   ├── pages/
+│   │   └── options/
+│   ├── scripts/
+│   │   ├── background.js
+│   │   ├── content/
+│   │   └── shared/
+│   └── styles/
+├── src/
+│   └── backend/
+│       ├── config/
+│       ├── lib/
+│       ├── middleware/
+│       ├── routes/
+│       └── services/
+├── .env.example
+└── package.json
+```
+
+## Requirements
+
+- Node.js 18+
+- Chrome, Chromium, or another Chromium-based browser
+- A Notion integration with access to your target database
+
+## Setup
+
+### 1. Install dependencies
+
+```bash
+npm install
+cp .env.example .env
+```
+
+### 2. Create a Notion integration
+
+1. Go to [Notion integrations](https://www.notion.so/my-integrations)
+2. Create an internal integration
+3. Copy the integration token
+4. Share your destination database with that integration
+
+### 3. Configure the backend
+
+Fill in `.env`:
+
+- `NOTION_TOKEN`: required, your Notion integration secret
+- `HOST`: optional, defaults to `127.0.0.1`
+- `PORT`: optional, defaults to `8787`
+- `DEFAULT_NOTION_DATABASE_ID`: optional fallback database ID
+
+Start the server:
+
+```bash
+npm run start
+```
+
+The API will be available at `http://127.0.0.1:8787` unless you change `HOST`.
+
+### Running the server in the background on macOS
+
+If you want the backend to keep running without an open terminal, use a `launchd` agent.
+
+1. Create `~/Library/LaunchAgents/com.example.knowledge-gpt.plist`
+2. Paste in:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>Label</key>
+    <string>com.example.knowledge-gpt</string>
+
+    <key>ProgramArguments</key>
+    <array>
+      <string>/opt/homebrew/bin/node</string>
+      <string>/path/to/knowledge-gpt/src/backend/server.js</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/path/to/knowledge-gpt</string>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <true/>
+
+    <key>StandardOutPath</key>
+    <string>/path/to/knowledge-gpt/server.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/path/to/knowledge-gpt/server-error.log</string>
+  </dict>
+</plist>
+```
+
+3. Load the service:
+
+```bash
+launchctl load ~/Library/LaunchAgents/com.example.knowledge-gpt.plist
+launchctl start com.example.knowledge-gpt
+```
+
+4. Verify that it is running:
+
+```bash
+launchctl list | grep knowledge-gpt
+curl http://127.0.0.1:8787/health
+tail -f "/path/to/knowledge-gpt/server.log"
+```
+
+Notes:
+
+- `launchd` restarts the backend if it exits
+- the backend will not run while the Mac is asleep
+- replace `/path/to/knowledge-gpt` with the actual path to your cloned repository
+- replace `com.example.knowledge-gpt` with your own preferred LaunchAgent label if you want
+- if `node` is installed somewhere else on your machine, run `which node` and update the plist path
+
+### Restarting the background server after code changes
+
+If you change the backend source code, restart the `launchd` service to apply the changes:
+
+```bash
+launchctl unload ~/Library/LaunchAgents/com.example.knowledge-gpt.plist
+launchctl load ~/Library/LaunchAgents/com.example.knowledge-gpt.plist
+launchctl start com.example.knowledge-gpt
+```
+
+You can then confirm the new version is running with:
+
+```bash
+curl http://127.0.0.1:8787/health
+tail -n 50 "/path/to/knowledge-gpt/server.log"
+```
+
+### 4. Load the extension
+
+1. Open `chrome://extensions`
+2. Enable Developer mode
+3. Click `Load unpacked`
+4. Select the repository's `extension/` directory
+
+### 5. Configure the extension
+
+Open the extension options page and set:
+
+- Backend URL, for example `http://127.0.0.1:8787`
+- Notion database ID, or leave it blank if you set `DEFAULT_NOTION_DATABASE_ID`
+- Property names for the fields you want this integration to populate
+
+## Current scope
+
+The current implementation supports YouTube watch pages only.
+
+The broader `Knowledge GPT` direction is to support saving useful information from more kinds of pages and sites over time, but that behavior is not implemented yet.
+
+## Recommended Notion mapping
+
+At minimum, configure:
+
+- a title property for the video title
+- a URL property or video ID property for deduplication
+
+Optional mappings:
+
+- a select property for the channel name
+- a date property for the last synced timestamp
+
+The current YouTube flow writes the full transcript into the Notion page body as code blocks under a `Transcript` heading.
+
+## API
+
+### `GET /health`
+
+Returns a simple status payload for the local backend.
+
+### `POST /save-transcript`
+
+Accepts:
+
+```json
+{
+  "videoId": "abc123",
+  "url": "https://www.youtube.com/watch?v=abc123",
+  "title": "Example Video",
+  "channel": "Example Channel",
+  "transcript": "First line\nSecond line",
+  "capturedAt": "2026-05-05T10:00:00.000Z",
+  "databaseId": "optional-database-id",
+  "propertyMapping": {
+    "title": "Title",
+    "videoUrl": "URL",
+    "videoId": "Video ID",
+    "channel": "Creator / Source",
+    "lastSyncedAt": "Last Synced At"
+  }
+}
+```
+
+## Development
+
+Run the backend in watch mode:
+
+```bash
+npm run dev
+```
+
+Use `npm run dev` during active local development if you want the server to restart automatically when backend files change. Use the `launchd` setup above when you want the server to keep running in the background between terminal sessions.
+
+Run syntax checks:
+
+```bash
+npm run check
+```
+
+## Publishing notes
+
+Before publishing publicly, you will probably still want to add:
+
+- a screenshot or demo GIF
+- a real repository URL in `package.json`
+- GitHub issue templates or contribution automation if you want outside contributors
+
+## License
+
+[MIT](./LICENSE)
