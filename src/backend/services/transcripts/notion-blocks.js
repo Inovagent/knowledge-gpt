@@ -1,5 +1,6 @@
 const {
   BODY_BLOCK_LIMIT,
+  CONTENT_HEADING,
   CODE_SEGMENTS_PER_BLOCK,
   RICH_TEXT_CHUNK_SIZE,
   TRANSCRIPT_HEADING
@@ -25,7 +26,7 @@ function chunkBlocks(blocks, size = BODY_BLOCK_LIMIT) {
   return chunkArray(blocks, size);
 }
 
-function buildTranscriptBlocks(transcript) {
+function buildTranscriptBlocks(transcript, heading = TRANSCRIPT_HEADING) {
   const normalizedTranscript = transcript
     .split("\n")
     .map((line) => line.trim())
@@ -39,7 +40,7 @@ function buildTranscriptBlocks(transcript) {
       object: "block",
       type: "heading_2",
       heading_2: {
-        rich_text: [{ type: "text", text: { content: TRANSCRIPT_HEADING } }]
+        rich_text: [{ type: "text", text: { content: heading } }]
       }
     }
   ];
@@ -61,7 +62,12 @@ function buildTranscriptBlocks(transcript) {
   return blocks;
 }
 
+function getContentHeading(payload = {}) {
+  return payload.contentType === "email" ? CONTENT_HEADING : TRANSCRIPT_HEADING;
+}
+
 module.exports = {
   buildTranscriptBlocks,
-  chunkBlocks
+  chunkBlocks,
+  getContentHeading
 };

@@ -37,7 +37,15 @@ function buildProperties(payload, propertyMapping) {
   if (propertyMapping.channel) {
     properties[propertyMapping.channel] = {
       select: {
-        name: payload.channel.replaceAll(",", " ")
+        name: (payload.source || payload.channel).replaceAll(",", " ")
+      }
+    };
+  }
+
+  if (propertyMapping.sourceType && payload.sourceType) {
+    properties[propertyMapping.sourceType] = {
+      select: {
+        name: payload.sourceType.replaceAll(",", " ")
       }
     };
   }
@@ -76,7 +84,25 @@ function getPageStatusName(page) {
   return "";
 }
 
+function getSelectPropertyName(page, propertyName) {
+  const property = page?.properties?.[propertyName];
+  if (!property) {
+    return "";
+  }
+
+  if (property.type === "select") {
+    return property.select?.name || "";
+  }
+
+  if (property.type === "status") {
+    return property.status?.name || "";
+  }
+
+  return "";
+}
+
 module.exports = {
   buildProperties,
-  getPageStatusName
+  getPageStatusName,
+  getSelectPropertyName
 };

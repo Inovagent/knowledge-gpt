@@ -12,21 +12,26 @@ function validateSaveTranscriptRequest(body, serverConfig) {
     return errors;
   }
 
-  const fields = ["videoId", "url", "title", "channel", "transcript"];
-  for (const field of fields) {
-    if (!String(body[field] || "").trim()) {
-      errors.push(`Missing required field: ${field}.`);
-    }
+  const content = String(body.content || body.transcript || "").trim();
+  const title = String(body.title || "").trim();
+  const source = String(body.source || body.channel || "").trim();
+
+  if (!title) {
+    errors.push("Missing required field: title.");
+  }
+
+  if (!source) {
+    errors.push("Missing required field: source.");
+  }
+
+  if (!content) {
+    errors.push("Missing required field: content.");
   }
 
   const propertyMapping = normalizePropertyMapping(body.propertyMapping);
 
   if (!propertyMapping.title) {
     errors.push("Property mapping must include a title property name.");
-  }
-
-  if (!propertyMapping.videoId && !propertyMapping.videoUrl) {
-    errors.push("Configure at least one dedupe property: videoId or videoUrl.");
   }
 
   const databaseId = String(body.databaseId || serverConfig.defaultNotionDatabaseId || "").trim();

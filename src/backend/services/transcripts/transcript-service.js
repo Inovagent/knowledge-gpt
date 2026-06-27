@@ -1,5 +1,5 @@
 const { createNotionClient } = require("./notion-client");
-const { buildTranscriptBlocks } = require("./notion-blocks");
+const { buildTranscriptBlocks, getContentHeading } = require("./notion-blocks");
 const { buildProperties, getPageStatusName } = require("./notion-properties");
 const { findExistingPage } = require("./notion-queries");
 const { TO_PROCESS_STATUS } = require("./constants");
@@ -35,7 +35,7 @@ async function upsertTranscript({
       database_id: databaseId
     },
     properties,
-    children: buildTranscriptBlocks(payload.transcript)
+    children: buildTranscriptBlocks(payload.content || payload.transcript, getContentHeading(payload))
   });
 
   return {

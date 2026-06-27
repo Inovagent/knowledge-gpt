@@ -7,7 +7,7 @@ const { validateSaveTranscriptRequest } = require("./validate-request");
 function createTranscriptRouter(serverConfig) {
   const router = express.Router();
 
-  router.post("/save-transcript", async (req, res) => {
+  async function handleSave(req, res) {
     const errors = validateSaveTranscriptRequest(req.body, serverConfig);
     if (errors.length) {
       error("API", "validation-error", errors);
@@ -23,12 +23,14 @@ function createTranscriptRouter(serverConfig) {
     );
 
     try {
-      log("API", "save-transcript:start", {
+      log("API", "save-capture:start", {
         databaseId,
         title: payload.title,
         url: payload.url,
-        channel: payload.channel,
-        transcriptLength: payload.transcript.length
+        source: payload.source || payload.channel,
+        sourceType: payload.sourceType,
+        contentType: payload.contentType,
+        contentLength: (payload.content || payload.transcript).length
       });
 
       const result = await upsertTranscript({
@@ -38,7 +40,7 @@ function createTranscriptRouter(serverConfig) {
         payload
       });
 
-      log("API", "save-transcript:success", result);
+      log("API", "save-capture:success", result);
 
       return res.json({
         ok: true,
@@ -46,13 +48,16 @@ function createTranscriptRouter(serverConfig) {
       });
     } catch (caughtError) {
       const message = caughtError && caughtError.message ? caughtError.message : "Unexpected Notion error.";
-      error("API", "save-transcript:error", message);
+      error("API", "save-capture:error", message);
       return res.status(500).json({
         ok: false,
         error: message
       });
     }
-  });
+  }
+
+  router.post("/save-transcript", handleSave);
+  router.post("/save-content", handleSave);
 
   return router;
 }
