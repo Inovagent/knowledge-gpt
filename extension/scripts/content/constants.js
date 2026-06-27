@@ -1,4 +1,5 @@
 const BUTTON_ID = "yt-transcript-to-notion-button";
+const COPY_BUTTON_ID = "yt-transcript-to-notion-copy-button";
 const BUTTON_CONTAINER_ID = "yt-transcript-to-notion-container";
 const WATCH_PATH = "/watch";
 const PROCESSED_VIDEOS_KEY = "processedVideos";
@@ -74,4 +75,24 @@ const ICONS = {
     <span aria-hidden="true" class="yt-transcript-to-notion__feedback"></span>
     <span aria-hidden="true" class="yt-transcript-to-notion__light"></span>
   `
+};
+
+const COPY_ICONS = {
+  idle: `
+    <div aria-hidden="true" class="yt-transcript-to-notion__elevated">
+      <span class="yt-transcript-to-notion__icon-shell">
+        <span class="yt-transcript-to-notion__icon-wrap">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="9" y="9" width="13" height="13" rx="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+        </span>
+      </span>
+    </div>
+    <span aria-hidden="true" class="yt-transcript-to-notion__feedback"></span>
+    <span aria-hidden="true" class="yt-transcript-to-notion__light"></span>
+  `,
+  loading: ICONS.loading,
+  copied: ICONS.saved,
+  error: ICONS.error
 };

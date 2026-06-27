@@ -1,6 +1,8 @@
 let mountObserver = null;
 let lastVideoId = null;
 let isSaving = false;
+let isExtractingTranscript = false;
+let copyResetTimeoutId = null;
 
 async function getProcessedVideos() {
   const stored = await chrome.storage.local.get(PROCESSED_VIDEOS_KEY);

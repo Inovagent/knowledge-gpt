@@ -66,6 +66,14 @@ async function ensureTranscriptOpen() {
   throw new Error("Transcript panel did not load in time.");
 }
 
+function normalizeTranscriptBody(transcript) {
+  return transcript
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .join("\n");
+}
+
 async function extractTranscript() {
   await ensureTranscriptOpen();
 

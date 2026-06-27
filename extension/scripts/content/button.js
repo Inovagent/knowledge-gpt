@@ -1,25 +1,69 @@
-function setButtonState(state, detail) {
-  const button = document.getElementById(BUTTON_ID);
+const SAVE_BUTTON_LABELS = {
+  idle: "Save transcript",
+  loading: "Saving transcript",
+  saved: "Transcript saved",
+  error: "Save failed",
+  skipped: "Skipped"
+};
+
+const COPY_BUTTON_LABELS = {
+  idle: "Copy transcript",
+  loading: "Copying transcript",
+  copied: "Transcript copied",
+  error: "Copy failed"
+};
+
+const COPY_SUCCESS_RESET_MS = 2000;
+
+function setActionButtonState(buttonId, state, detail, icons, labels) {
+  const button = document.getElementById(buttonId);
   if (!button) {
     return;
   }
 
   button.dataset.state = state;
-
-  const stateLabelMap = {
-    idle: "Save transcript",
-    loading: "Saving transcript",
-    saved: "Transcript saved",
-    error: "Save failed",
-    skipped: "Skipped"
-  };
-
-  button.innerHTML = ICONS[state] || ICONS.idle;
-  button.setAttribute("aria-label", detail || stateLabelMap[state] || "Save transcript");
-  button.title = detail || stateLabelMap[state] || "Save transcript";
+  button.innerHTML = icons[state] || icons.idle;
+  button.setAttribute("aria-label", detail || labels[state] || labels.idle);
+  button.title = detail || labels[state] || labels.idle;
   button.disabled = state === "loading";
 
-  log("button-state", { state, detail: detail || "" });
+  log("button-state", { buttonId, state, detail: detail || "" });
+}
+
+function setSaveButtonState(state, detail) {
+  setActionButtonState(BUTTON_ID, state, detail, ICONS, SAVE_BUTTON_LABELS);
+}
+
+function setCopyButtonState(state, detail) {
+  setActionButtonState(COPY_BUTTON_ID, state, detail, COPY_ICONS, COPY_BUTTON_LABELS);
+}
+
+function clearCopyResetTimeout() {
+  if (copyResetTimeoutId) {
+    window.clearTimeout(copyResetTimeoutId);
+    copyResetTimeoutId = null;
+  }
+}
+
+function scheduleCopyIdleReset() {
+  clearCopyResetTimeout();
+  copyResetTimeoutId = window.setTimeout(() => {
+    copyResetTimeoutId = null;
+    setCopyButtonState("idle");
+  }, COPY_SUCCESS_RESET_MS);
+}
+
+async function withTranscriptExtraction() {
+  if (isExtractingTranscript) {
+    throw new Error("Transcript extraction already in progress.");
+  }
+
+  isExtractingTranscript = true;
+  try {
+    return await extractTranscript();
+  } finally {
+    isExtractingTranscript = false;
+  }
 }
 
 async function saveTranscript() {
@@ -31,15 +75,15 @@ async function saveTranscript() {
   }
 
   if (!isWatchPage()) {
-    setButtonState("error", "Open a YouTube watch page first.");
+    setSaveButtonState("error", "Open a YouTube watch page first.");
     return;
   }
 
   isSaving = true;
-  setButtonState("loading");
+  setSaveButtonState("loading");
 
   try {
-    const transcript = await extractTranscript();
+    const transcript = await withTranscriptExtraction();
     const payload = {
       videoId: getVideoId(),
       url: window.location.href,
@@ -68,7 +112,7 @@ async function saveTranscript() {
     }
 
     if (response.data.action === "skipped") {
-      setButtonState("skipped", response.data.reason || "Skipped because the entry is no longer To Process.");
+      setSaveButtonState("skipped", response.data.reason || "Skipped because the entry is no longer To Process.");
       return;
     }
 
@@ -76,13 +120,56 @@ async function saveTranscript() {
       title: payload.title,
       url: payload.url
     });
-    setButtonState("saved", `Transcript ${response.data.action} in Notion.`);
+    setSaveButtonState("saved", `Transcript ${response.data.action} in Notion.`);
   } catch (error) {
     log("save-transcript:error", error);
-    setButtonState("error", error?.message || "Failed to save transcript.");
+    setSaveButtonState("error", error?.message || "Failed to save transcript.");
   } finally {
     isSaving = false;
   }
+}
+
+async function copyTranscript() {
+  log("copy-transcript:clicked");
+  clearCopyResetTimeout();
+
+  if (!isWatchPage()) {
+    setCopyButtonState("error", "Open a YouTube watch page first.");
+    scheduleCopyIdleReset();
+    return;
+  }
+
+  setCopyButtonState("loading");
+
+  try {
+    const transcript = await withTranscriptExtraction();
+    const normalizedTranscript = normalizeTranscriptBody(transcript);
+
+    if (!normalizedTranscript) {
+      throw new Error("Transcript was empty after loading.");
+    }
+
+    await navigator.clipboard.writeText(normalizedTranscript);
+    log("copy-transcript:success", { length: normalizedTranscript.length });
+    setCopyButtonState("copied", "Transcript copied to clipboard.");
+    scheduleCopyIdleReset();
+  } catch (error) {
+    log("copy-transcript:error", error);
+    setCopyButtonState("error", error?.message || "Failed to copy transcript.");
+    scheduleCopyIdleReset();
+  }
+}
+
+function createActionButton({ id, className, ariaLabel, title, onClick, icons }) {
+  const button = document.createElement("button");
+  button.id = id;
+  button.type = "button";
+  button.className = className;
+  button.innerHTML = icons.idle;
+  button.setAttribute("aria-label", ariaLabel);
+  button.title = title;
+  button.addEventListener("click", onClick);
+  return button;
 }
 
 function createButton() {
@@ -90,16 +177,26 @@ function createButton() {
   container.id = BUTTON_CONTAINER_ID;
   container.className = "yt-transcript-to-notion";
 
-  const button = document.createElement("button");
-  button.id = BUTTON_ID;
-  button.type = "button";
-  button.className = "yt-transcript-to-notion__button";
-  button.innerHTML = ICONS.idle;
-  button.setAttribute("aria-label", "Save transcript");
-  button.title = "Save transcript";
-  button.addEventListener("click", saveTranscript);
+  const copyButton = createActionButton({
+    id: COPY_BUTTON_ID,
+    className: "yt-transcript-to-notion__button yt-transcript-to-notion__button--copy",
+    ariaLabel: "Copy transcript",
+    title: "Copy transcript",
+    onClick: copyTranscript,
+    icons: COPY_ICONS
+  });
 
-  container.appendChild(button);
+  const saveButton = createActionButton({
+    id: BUTTON_ID,
+    className: "yt-transcript-to-notion__button yt-transcript-to-notion__button--save",
+    ariaLabel: "Save transcript",
+    title: "Save transcript",
+    onClick: saveTranscript,
+    icons: ICONS
+  });
+
+  container.appendChild(copyButton);
+  container.appendChild(saveButton);
   return container;
 }
 
@@ -109,13 +206,16 @@ async function syncButtonStateForCurrentVideo() {
     return;
   }
 
+  clearCopyResetTimeout();
+  setCopyButtonState("idle");
+
   const processed = await isVideoProcessed(videoId);
   if (processed) {
-    setButtonState("saved", "Transcript already saved for this video.");
+    setSaveButtonState("saved", "Transcript already saved for this video.");
     return;
   }
 
-  setButtonState("idle", "Save transcript");
+  setSaveButtonState("idle", "Save transcript");
 }
 
 async function mountButton() {
@@ -151,6 +251,7 @@ function handleNavigationChange() {
   }
 
   lastVideoId = currentVideoId;
+  clearCopyResetTimeout();
   const existing = document.getElementById(BUTTON_CONTAINER_ID);
   if (existing) {
     existing.remove();
