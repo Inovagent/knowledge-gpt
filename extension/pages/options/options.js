@@ -8,6 +8,7 @@ async function loadSettings() {
   document.getElementById("videoUrl").value = settings.propertyMapping.videoUrl || "";
   document.getElementById("videoId").value = settings.propertyMapping.videoId || "";
   document.getElementById("channel").value = settings.propertyMapping.channel || "";
+  document.getElementById("sourceType").value = settings.propertyMapping.sourceType || "";
   document.getElementById("lastSyncedAt").value = settings.propertyMapping.lastSyncedAt || "";
 }
 
@@ -22,6 +23,7 @@ async function saveSettings(event) {
       videoUrl: document.getElementById("videoUrl").value.trim(),
       videoId: document.getElementById("videoId").value.trim(),
       channel: document.getElementById("channel").value.trim(),
+      sourceType: document.getElementById("sourceType").value.trim(),
       lastSyncedAt: document.getElementById("lastSyncedAt").value.trim()
     }
   };

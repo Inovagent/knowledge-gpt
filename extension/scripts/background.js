@@ -1,7 +1,7 @@
 importScripts("../scripts/shared/settings.js", "../scripts/shared/backend-url.js");
 
 function log(...args) {
-  console.log("[YT Transcript BG]", ...args);
+  console.log("[Knowledge GPT BG]", ...args);
 }
 
 async function getSettings() {
@@ -10,7 +10,7 @@ async function getSettings() {
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message?.type !== "SAVE_TRANSCRIPT") {
+  if (!["SAVE_TRANSCRIPT", "SAVE_EMAIL_CONTENT"].includes(message?.type)) {
     return false;
   }
 
@@ -40,18 +40,21 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         databaseId: settings.databaseId,
         propertyMapping: settings.propertyMapping
       });
+      const endpoint = message.type === "SAVE_EMAIL_CONTENT" ? "/save-content" : "/save-transcript";
 
       let response;
       let data = {};
       let lastFetchError;
 
       for (const baseUrl of candidateBaseUrls) {
-        const requestUrl = `${baseUrl}/save-transcript`;
+        const requestUrl = `${baseUrl}${endpoint}`;
         log("request-start", {
           requestUrl,
           databaseIdPresent: Boolean(settings.databaseId),
-          videoId: message.payload?.videoId,
-          title: message.payload?.title
+          externalId: message.payload?.externalId || message.payload?.videoId,
+          title: message.payload?.title,
+          sourceType: message.payload?.sourceType,
+          contentType: message.payload?.contentType
         });
 
         try {

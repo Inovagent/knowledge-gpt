@@ -2,10 +2,11 @@
   "manifest_version": 3,
   "name": "Knowledge GPT",
   "version": "0.5.0",
-  "description": "Save information from supported sites into Notion. Currently focused on YouTube watch pages.",
+  "description": "Save information from supported sites like YouTube and Gmail into Notion.",
   "permissions": ["storage"],
   "host_permissions": [
     "https://www.youtube.com/*",
+    "https://mail.google.com/*",
     "http://localhost/*",
     "http://127.0.0.1/*"
   ],
@@ -24,6 +25,18 @@
         "scripts/content/index.js"
       ],
       "css": ["styles/content.css"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://mail.google.com/*"],
+      "js": [
+        "scripts/content/gmail-constants.js",
+        "scripts/content/gmail-dom.js",
+        "scripts/content/gmail-state.js",
+        "scripts/content/gmail-button.js",
+        "scripts/content/gmail-index.js"
+      ],
+      "css": ["styles/gmail.css"],
       "run_at": "document_idle"
     }
   ],

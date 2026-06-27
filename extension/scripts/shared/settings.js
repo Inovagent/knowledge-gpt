@@ -6,6 +6,7 @@ const DEFAULT_SETTINGS = {
     videoUrl: "URL",
     videoId: "",
     channel: "Creator / Source",
+    sourceType: "Source Type",
     lastSyncedAt: ""
   }
 };

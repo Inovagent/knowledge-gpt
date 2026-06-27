@@ -10,7 +10,7 @@
     <main class="shell">
       <section class="hero">
         <h1>Knowledge GPT</h1>
-        <p>Point the extension at your local backend and configure the fields used by the current YouTube capture flow.</p>
+        <p>Point the extension at your local backend and configure the fields used by the current YouTube and Gmail capture flows.</p>
       </section>
 
       <section class="card">
@@ -36,18 +36,23 @@
             </label>
 
             <label>
-              <span>Video URL property</span>
-              <input id="videoUrl" name="videoUrl" placeholder="URL" />
+              <span>URL property</span>
+              <input id="videoUrl" name="videoUrl" placeholder="Optional" />
             </label>
 
             <label>
-              <span>Video ID property</span>
+              <span>External ID property</span>
               <input id="videoId" name="videoId" placeholder="Optional" />
             </label>
 
             <label>
               <span>Creator / Source property</span>
               <input id="channel" name="channel" placeholder="Creator / Source" />
+            </label>
+
+            <label>
+              <span>Source Type property</span>
+              <input id="sourceType" name="sourceType" placeholder="Source Type" />
             </label>
 
             <label>

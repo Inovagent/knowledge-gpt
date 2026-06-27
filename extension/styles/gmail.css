@@ -1,0 +1,58 @@
+.kg-email-save-button {
+  color: rgba(255, 255, 255, 0.7);
+  user-select: none;
+}
+
+.kg-email-save-button__icon-shell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  line-height: 0;
+}
+
+.kg-email-save-button svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  stroke: currentColor;
+  stroke-width: 2.1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+
+.kg-email-save-button[data-state="idle"] {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.kg-email-save-button[data-state="loading"] {
+  color: #f57c00;
+}
+
+.kg-email-save-button[data-state="saved"] {
+  color: #188038;
+}
+
+.kg-email-save-button[data-state="skipped"] {
+  color: #b06000;
+}
+
+.kg-email-save-button[data-state="error"] {
+  color: #d93025;
+}
+
+.kg-email-save-button .is-spinning {
+  animation: kg-email-spin 0.9s linear infinite;
+}
+
+@keyframes kg-email-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
