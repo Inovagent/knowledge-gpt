@@ -1,10 +1,10 @@
 # Knowledge GPT
 
-Save information from supported sites into Notion without exposing your Notion secret in the browser. Today the project is focused on saving YouTube watch-page transcripts, but the longer-term direction is broader site capture.
+Save information from supported sites into Notion without exposing your Notion secret in the browser. The project currently supports YouTube transcript capture and Gmail email-content capture, with room to expand further over time.
 
 This repository currently contains:
 
-- a Chromium Manifest V3 extension that adds a save button on YouTube watch pages
+- a Chromium Manifest V3 extension that adds save buttons on supported pages like YouTube and Gmail
 - a small local Node.js API that writes captured content into Notion
 
 ## Why this project exists
@@ -15,8 +15,10 @@ Most browser-side Notion integrations force you to put a secret in the extension
 
 - Uses a local-first architecture so browser-side code never needs your Notion secret
 - Injects a save button into YouTube's watch-page action bar
+- Injects a Gmail-style save button into open Gmail message action bars
 - Opens the transcript panel automatically when needed
 - Extracts transcript text across multiple known YouTube DOM variants
+- Extracts readable email content from the active Gmail message body
 - Sends transcript data to a local backend for persistence into Notion
 - Creates a new Notion page or recreates an existing one based on your dedupe mapping
 - Preserves a simple load-unpacked development flow
@@ -180,23 +182,25 @@ Open the extension options page and set:
 
 ## Current scope
 
-The current implementation supports YouTube watch pages only.
+The current implementation supports:
 
-The broader `Knowledge GPT` direction is to support saving useful information from more kinds of pages and sites over time, but that behavior is not implemented yet.
+- YouTube watch pages for transcript capture
+- Gmail message views for email-content capture
 
 ## Recommended Notion mapping
 
 At minimum, configure:
 
-- a title property for the video title
-- a URL property or video ID property for deduplication
+- a title property
 
-Optional mappings:
+Recommended optional mappings:
 
-- a select property for the channel name
+- a URL property
+- an external ID property for stronger deduplication
+- a select property for `Creator / Source`
+- a select property for `Source Type`
 - a date property for the last synced timestamp
-
-The current YouTube flow writes the full transcript into the Notion page body as code blocks under a `Transcript` heading.
+The current YouTube flow writes the full transcript into the Notion page body as code blocks under a `Transcript` heading. The Gmail flow writes the extracted email body into the page body as code blocks under a `Content` heading.
 
 ## API
 
@@ -206,22 +210,29 @@ Returns a simple status payload for the local backend.
 
 ### `POST /save-transcript`
 
+Accepts YouTube transcript saves using the shared capture schema.
+
+### `POST /save-content`
+
 Accepts:
 
 ```json
 {
-  "videoId": "abc123",
-  "url": "https://www.youtube.com/watch?v=abc123",
-  "title": "Example Video",
-  "channel": "Example Channel",
-  "transcript": "First line\nSecond line",
+  "externalId": "abc123",
+  "url": "https://example.com/item/abc123",
+  "title": "Example title",
+  "source": "Example source",
+  "sourceType": "Newsletter",
+  "content": "First line\nSecond line",
+  "contentType": "email",
   "capturedAt": "2026-05-05T10:00:00.000Z",
   "databaseId": "optional-database-id",
   "propertyMapping": {
     "title": "Title",
     "videoUrl": "URL",
-    "videoId": "Video ID",
+    "videoId": "External ID",
     "channel": "Creator / Source",
+    "sourceType": "Source Type",
     "lastSyncedAt": "Last Synced At"
   }
 }
