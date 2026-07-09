@@ -2,19 +2,44 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function transcriptNodes() {
-  const oldNodes = Array.from(document.querySelectorAll("ytd-transcript-segment-renderer"));
-  if (oldNodes.length) {
-    return oldNodes
-      .map((node) => node.querySelector(".segment-text")?.textContent?.trim())
-      .filter(Boolean);
+const TRANSCRIPT_EXTRACTORS = [
+  {
+    name: "legacy-renderer",
+    rowSelector: "ytd-transcript-segment-renderer",
+    textSelectors: [".segment-text"]
+  },
+  {
+    name: "modern-engagement-panel",
+    rowSelector: 'yt-section-list-renderer[data-target-id="PAmodern_transcript_view"] transcript-segment-view-model',
+    textSelectors: ['span[role="text"]', ".ytAttributedStringHost"]
+  },
+  {
+    name: "modern-contents-panel",
+    rowSelector: "#contents transcript-segment-view-model",
+    textSelectors: ['span[role="text"]', ".ytAttributedStringHost"]
+  }
+];
+
+function textFromNode(node, selectors) {
+  for (const selector of selectors) {
+    const text = node.querySelector(selector)?.textContent?.trim();
+    if (text) {
+      return text;
+    }
   }
 
-  const newNodes = Array.from(document.querySelectorAll("#contents transcript-segment-view-model"));
-  if (newNodes.length) {
-    return newNodes
-      .map((node) => node.querySelector('span[role="text"]')?.textContent?.trim())
-      .filter(Boolean);
+  return "";
+}
+
+function transcriptNodes() {
+  for (const extractor of TRANSCRIPT_EXTRACTORS) {
+    const nodes = Array.from(document.querySelectorAll(extractor.rowSelector));
+    const lines = nodes.map((node) => textFromNode(node, extractor.textSelectors)).filter(Boolean);
+
+    if (lines.length) {
+      log("transcript-nodes:matched", { extractor: extractor.name, lines: lines.length });
+      return lines;
+    }
   }
 
   return [];
