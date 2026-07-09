@@ -13,7 +13,8 @@
   "scripts": {
     "start": "node src/backend/server.js",
     "dev": "node --watch src/backend/server.js",
-    "check": "node --check src/backend/server.js && node --check src/backend/app.js && node --check src/backend/routes/health.js && node --check src/backend/routes/transcripts/index.js && node --check src/backend/routes/transcripts/payload.js && node --check src/backend/routes/transcripts/validate-request.js && node --check src/backend/services/transcripts/transcript-service.js && node --check src/backend/services/transcripts/notion-client.js && node --check src/backend/services/transcripts/notion-blocks.js && node --check src/backend/services/transcripts/notion-properties.js && node --check src/backend/services/transcripts/notion-queries.js && node --check src/backend/config/env.js && node --check src/backend/lib/logger.js && node --check src/backend/middleware/cors.js && node --check src/backend/middleware/request-logger.js && node --check extension/scripts/background.js && node --check extension/scripts/shared/settings.js && node --check extension/scripts/shared/backend-url.js && node --check extension/scripts/content/constants.js && node --check extension/scripts/content/dom.js && node --check extension/scripts/content/transcript.js && node --check extension/scripts/content/state.js && node --check extension/scripts/content/button.js && node --check extension/scripts/content/index.js && node --check extension/scripts/content/gmail-constants.js && node --check extension/scripts/content/gmail-dom.js && node --check extension/scripts/content/gmail-state.js && node --check extension/scripts/content/gmail-button.js && node --check extension/scripts/content/gmail-index.js && node --check extension/pages/options/options.js"
+    "check": "find src extension test -name '*.js' -print0 | xargs -0 -n1 node --check",
+    "test": "node --test"
   },
   "keywords": [
     "chrome-extension",

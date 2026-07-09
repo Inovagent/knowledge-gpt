@@ -1,11 +1,11 @@
 # Knowledge GPT
 
-Save information from supported sites into Notion without exposing your Notion secret in the browser. The project currently supports YouTube transcript capture and Gmail email-content capture, with room to expand further over time.
+Save information from supported sites into Notion or local Markdown without exposing secrets or filesystem paths in the browser. The project currently supports YouTube transcript capture and Gmail email-content capture, with room to expand further over time.
 
 This repository currently contains:
 
 - a Chromium Manifest V3 extension that adds save buttons on supported pages like YouTube and Gmail
-- a small local Node.js API that writes captured content into Notion
+- a small local Node.js API that writes captured content into Notion or backend-configured Markdown files
 
 ## Why this project exists
 
@@ -19,8 +19,9 @@ Most browser-side Notion integrations force you to put a secret in the extension
 - Opens the transcript panel automatically when needed
 - Extracts transcript text across multiple known YouTube DOM variants
 - Extracts readable email content from the active Gmail message body
-- Sends transcript data to a local backend for persistence into Notion
+- Sends captured data to a local backend for persistence into Notion or local Markdown
 - Creates a new Notion page or recreates an existing one based on your dedupe mapping
+- Writes local Markdown files with YAML frontmatter when `localMarkdown` is selected
 - Preserves a simple load-unpacked development flow
 
 ## Repository structure
@@ -51,7 +52,8 @@ Most browser-side Notion integrations force you to put a secret in the extension
 
 - Node.js 18+
 - Chrome, Chromium, or another Chromium-based browser
-- A Notion integration with access to your target database
+- A Notion integration with access to your target database, if saving to Notion
+- A local folder configured in the backend, if saving to local Markdown
 
 ## Setup
 
@@ -62,21 +64,33 @@ npm install
 cp .env.example .env
 ```
 
-### 2. Create a Notion integration
+### 2. Choose a storage destination
+
+The extension requires an explicit destination before saving:
+
+- `notion`: writes captures into Notion using the backend's Notion token
+- `localMarkdown`: writes `.md` files into the backend folder configured by `LOCAL_MARKDOWN_ROOT`
+
+Existing users must open the extension options page and choose a destination after upgrading.
+
+### 3. Create a Notion integration
 
 1. Go to [Notion integrations](https://www.notion.so/my-integrations)
 2. Create an internal integration
 3. Copy the integration token
 4. Share your destination database with that integration
 
-### 3. Configure the backend
+Skip this step if you only plan to save local Markdown.
+
+### 4. Configure the backend
 
 Fill in `.env`:
 
-- `NOTION_TOKEN`: required, your Notion integration secret
+- `NOTION_TOKEN`: required for Notion saves, your Notion integration secret
 - `HOST`: optional, defaults to `127.0.0.1`
 - `PORT`: optional, defaults to `8787`
-- `DEFAULT_NOTION_DATABASE_ID`: optional fallback database ID
+- `DEFAULT_NOTION_DATABASE_ID`: optional fallback database ID for Notion saves
+- `LOCAL_MARKDOWN_ROOT`: required for local Markdown saves; must be an absolute path or start with `~/`, point to an existing directory, and be writable by the backend
 
 Start the server:
 
@@ -165,20 +179,24 @@ curl http://127.0.0.1:8787/health
 tail -n 50 "/path/to/knowledge-gpt/server.log"
 ```
 
-### 4. Load the extension
+For local Markdown, the browser never sends a folder, filename, extension, or subpath. The backend generates direct-child `.md` filenames and writes with exclusive create semantics so existing files are not overwritten.
+
+### 5. Load the extension
 
 1. Open `chrome://extensions`
 2. Enable Developer mode
 3. Click `Load unpacked`
 4. Select the repository's `extension/` directory
 
-### 5. Configure the extension
+### 6. Configure the extension
 
 Open the extension options page and set:
 
+- Storage destination: `Notion` or `Local Markdown`
 - Backend URL, for example `http://127.0.0.1:8787`
-- Notion database ID, or leave it blank if you set `DEFAULT_NOTION_DATABASE_ID`
-- Property names for the fields you want this integration to populate
+- For Notion: Notion database ID, or leave it blank if you set `DEFAULT_NOTION_DATABASE_ID`
+- For Notion: property names for the fields you want this integration to populate
+- For Local Markdown: make sure `/health` reports that `LOCAL_MARKDOWN_ROOT` is set
 
 ## Current scope
 
@@ -202,15 +220,48 @@ Recommended optional mappings:
 - a date property for the last synced timestamp
 The current YouTube flow writes the full transcript into the Notion page body as code blocks under a `Transcript` heading. The Gmail flow writes the extracted email body into the page body as code blocks under a `Content` heading.
 
+## Local Markdown output
+
+Local Markdown files are named with this pattern:
+
+```text
+YYYY-MM-DD-<contentType-or-sourceType>-<slug-title>-<short-externalId>.md
+```
+
+If a generated filename already exists, the backend writes `-2`, `-3`, and so on. Each file includes YAML frontmatter for available metadata and a Markdown body headed by `Transcript` or `Content`.
+
 ## API
 
 ### `GET /health`
 
-Returns a simple status payload for the local backend.
+Returns a simple status payload for the local backend, including booleans such as `hasNotionToken`, `hasDefaultDatabaseId`, and `hasLocalMarkdownRoot`. The local Markdown flag is only true when `LOCAL_MARKDOWN_ROOT` exists and is writable. It does not expose the configured local Markdown path.
 
 ### `POST /save-transcript`
 
 Accepts YouTube transcript saves using the shared capture schema.
+
+Notion request:
+
+```json
+{
+  "storageDestination": "notion",
+  "videoId": "abc123",
+  "url": "https://www.youtube.com/watch?v=abc123",
+  "title": "Example video",
+  "channel": "Example creator",
+  "transcript": "First line\nSecond line",
+  "capturedAt": "2026-05-05T10:00:00.000Z",
+  "databaseId": "optional-database-id",
+  "propertyMapping": {
+    "title": "Title",
+    "videoUrl": "URL",
+    "videoId": "External ID",
+    "channel": "Creator / Source",
+    "sourceType": "Source Type",
+    "lastSyncedAt": "Last Synced At"
+  }
+}
+```
 
 ### `POST /save-content`
 
@@ -218,6 +269,23 @@ Accepts:
 
 ```json
 {
+  "storageDestination": "localMarkdown",
+  "externalId": "abc123",
+  "url": "https://example.com/item/abc123",
+  "title": "Example title",
+  "source": "Example source",
+  "sourceType": "Newsletter",
+  "content": "First line\nSecond line",
+  "contentType": "email",
+  "capturedAt": "2026-05-05T10:00:00.000Z"
+}
+```
+
+For Notion saves, include the Notion fields:
+
+```json
+{
+  "storageDestination": "notion",
   "externalId": "abc123",
   "url": "https://example.com/item/abc123",
   "title": "Example title",
@@ -252,6 +320,12 @@ Run syntax checks:
 
 ```bash
 npm run check
+```
+
+Run tests:
+
+```bash
+npm test
 ```
 
 ## Publishing notes

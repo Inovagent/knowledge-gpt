@@ -8,9 +8,10 @@ async function upsertTranscript({
   notionToken,
   databaseId,
   propertyMapping,
-  payload
+  payload,
+  notionClient
 }) {
-  const notion = createNotionClient(notionToken);
+  const notion = notionClient || createNotionClient(notionToken);
   const existingPage = await findExistingPage(notion, databaseId, payload, propertyMapping);
   const properties = buildProperties(payload, propertyMapping);
 

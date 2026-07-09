@@ -1,3 +1,11 @@
+function getEmailSavedDetail(responseData) {
+  if (responseData.storageDestination === "localMarkdown") {
+    return "Email content saved locally.";
+  }
+
+  return `Email ${responseData.action} in Notion.`;
+}
+
 function setEmailButtonState(button, state, detail) {
   if (!button) {
     return;
@@ -36,7 +44,7 @@ async function syncEmailButtonState(button, messageRoot) {
 
   const processed = await isEmailProcessed(emailId);
   if (processed) {
-    setEmailButtonState(button, "saved", "Email content already saved for this message.");
+    setEmailButtonState(button, "saved", "Email content already saved.");
     return;
   }
 
@@ -107,7 +115,7 @@ async function saveEmailContent(button, messageRoot) {
       title: payload.title,
       source: payload.source
     });
-    setEmailButtonState(button, "saved", `Email ${response.data.action} in Notion.`);
+    setEmailButtonState(button, "saved", getEmailSavedDetail(response.data));
   } catch (error) {
     gmailLog("save-email:error", error);
     setEmailButtonState(button, "error", error?.message || "Failed to save email content.");

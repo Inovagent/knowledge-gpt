@@ -1,6 +1,6 @@
 const express = require("express");
 const { error, log } = require("../../lib/logger");
-const { upsertTranscript } = require("../../services/transcripts/transcript-service");
+const { saveCapture } = require("../../services/storage/storage-service");
 const { buildTranscriptPayload } = require("./payload");
 const { validateSaveTranscriptRequest } = require("./validate-request");
 
@@ -17,26 +17,28 @@ function createTranscriptRouter(serverConfig) {
       });
     }
 
-    const { databaseId, propertyMapping, payload } = buildTranscriptPayload(
+    const { storageDestination, requestOptions, payload } = buildTranscriptPayload(
       req.body,
       serverConfig.defaultNotionDatabaseId
     );
+    const content = payload.content || payload.transcript || "";
 
     try {
       log("API", "save-capture:start", {
-        databaseId,
+        storageDestination,
+        databaseId: requestOptions.databaseId || undefined,
         title: payload.title,
         url: payload.url,
         source: payload.source || payload.channel,
         sourceType: payload.sourceType,
         contentType: payload.contentType,
-        contentLength: (payload.content || payload.transcript).length
+        contentLength: content.length
       });
 
-      const result = await upsertTranscript({
-        notionToken: serverConfig.notionToken,
-        databaseId,
-        propertyMapping,
+      const result = await saveCapture({
+        storageDestination,
+        requestOptions,
+        serverConfig,
         payload
       });
 
@@ -47,7 +49,7 @@ function createTranscriptRouter(serverConfig) {
         ...result
       });
     } catch (caughtError) {
-      const message = caughtError && caughtError.message ? caughtError.message : "Unexpected Notion error.";
+      const message = caughtError && caughtError.message ? caughtError.message : "Unexpected save error.";
       error("API", "save-capture:error", message);
       return res.status(500).json({
         ok: false,

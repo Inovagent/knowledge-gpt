@@ -10,56 +10,77 @@
     <main class="shell">
       <section class="hero">
         <h1>Knowledge GPT</h1>
-        <p>Point the extension at your local backend and configure the fields used by the current YouTube and Gmail capture flows.</p>
+        <p>Point the extension at your local backend and choose where YouTube and Gmail captures are saved.</p>
       </section>
 
       <section class="card">
         <form id="settings-form">
           <div class="grid">
             <label>
+              <span>Storage destination</span>
+              <select id="storageDestination" name="storageDestination" required>
+                <option value="">Choose a destination</option>
+                <option value="notion">Notion</option>
+                <option value="localMarkdown">Local Markdown</option>
+              </select>
+            </label>
+
+            <label>
               <span>Backend URL</span>
               <input id="backendUrl" name="backendUrl" placeholder="http://127.0.0.1:8787" required />
             </label>
-
-            <label>
-              <span>Notion Database ID</span>
-              <input id="databaseId" name="databaseId" placeholder="Optional if set in backend .env" />
-            </label>
           </div>
 
-          <h2 class="section-title">Property mapping</h2>
+          <section id="notion-settings" class="settings-panel">
+            <h2 class="section-title">Notion mapping</h2>
 
-          <div class="grid two">
-            <label>
-              <span>Title property</span>
-              <input id="title" name="title" placeholder="Title" required />
-            </label>
+            <div class="grid">
+              <label>
+                <span>Notion Database ID</span>
+                <input id="databaseId" name="databaseId" placeholder="Optional if set in backend .env" />
+              </label>
+            </div>
 
-            <label>
-              <span>URL property</span>
-              <input id="videoUrl" name="videoUrl" placeholder="Optional" />
-            </label>
+            <div class="grid two">
+              <label>
+                <span>Title property</span>
+                <input id="title" name="title" placeholder="Title" required />
+              </label>
 
-            <label>
-              <span>External ID property</span>
-              <input id="videoId" name="videoId" placeholder="Optional" />
-            </label>
+              <label>
+                <span>URL property</span>
+                <input id="videoUrl" name="videoUrl" placeholder="Optional" />
+              </label>
 
-            <label>
-              <span>Creator / Source property</span>
-              <input id="channel" name="channel" placeholder="Creator / Source" />
-            </label>
+              <label>
+                <span>External ID property</span>
+                <input id="videoId" name="videoId" placeholder="Optional" />
+              </label>
 
-            <label>
-              <span>Source Type property</span>
-              <input id="sourceType" name="sourceType" placeholder="Source Type" />
-            </label>
+              <label>
+                <span>Creator / Source property</span>
+                <input id="channel" name="channel" placeholder="Creator / Source" />
+              </label>
 
-            <label>
-              <span>Last synced at property</span>
-              <input id="lastSyncedAt" name="lastSyncedAt" placeholder="Optional date property" />
-            </label>
-          </div>
+              <label>
+                <span>Source Type property</span>
+                <input id="sourceType" name="sourceType" placeholder="Source Type" />
+              </label>
+
+              <label>
+                <span>Last synced at property</span>
+                <input id="lastSyncedAt" name="lastSyncedAt" placeholder="Optional date property" />
+              </label>
+            </div>
+          </section>
+
+          <section id="local-markdown-settings" class="settings-panel" hidden>
+            <h2 class="section-title">Local Markdown</h2>
+            <p class="help-text">
+              Markdown files are written by the backend into the folder configured with <code>LOCAL_MARKDOWN_ROOT</code>. The extension does not store or send folder paths.
+            </p>
+            <p class="setup-status" id="localMarkdownStatus"></p>
+          </section>
 
           <div class="actions">
             <button type="submit">Save settings</button>
@@ -70,6 +91,7 @@
     </main>
 
     <script src="../../scripts/shared/settings.js"></script>
+    <script src="../../scripts/shared/backend-url.js"></script>
     <script src="options.js"></script>
   </body>
 </html>
