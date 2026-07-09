@@ -179,7 +179,14 @@ function normalizeMarkdownContent(content) {
 }
 
 function getMarkdownHeading(payload) {
-  return payload.contentType === "email" ? "Content" : "Transcript";
+  const headings = {
+    article: "Article",
+    email: "Content",
+    selection: "Selection",
+    transcript: "Transcript"
+  };
+
+  return headings[payload.contentType] || "Content";
 }
 
 function normalizeMarkdownTitle(title) {

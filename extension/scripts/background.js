@@ -1,5 +1,16 @@
 importScripts("../scripts/shared/settings.js", "../scripts/shared/backend-url.js");
 
+const SAVE_MESSAGE_TYPES = ["SAVE_TRANSCRIPT", "SAVE_EMAIL_CONTENT", "SAVE_WEB_CAPTURE"];
+const WEB_CAPTURE_MENU_IDS = {
+  page: "knowledge-gpt-save-clean-page",
+  selection: "knowledge-gpt-save-selection"
+};
+const WEB_CAPTURE_SCRIPT_FILES = [
+  "vendor/Readability.js",
+  "scripts/shared/web-capture-utils.js",
+  "scripts/content/web-capture.js"
+];
+
 function log(...args) {
   console.log("[Knowledge GPT BG]", ...args);
 }
@@ -13,8 +24,63 @@ chrome.action.onClicked.addListener(() => {
   chrome.runtime.openOptionsPage();
 });
 
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.contextMenus.removeAll(() => {
+    chrome.contextMenus.create({
+      id: WEB_CAPTURE_MENU_IDS.page,
+      title: "Save clean page",
+      contexts: ["page"]
+    });
+
+    chrome.contextMenus.create({
+      id: WEB_CAPTURE_MENU_IDS.selection,
+      title: "Save selected text",
+      contexts: ["selection"]
+    });
+  });
+});
+
+async function injectWebCapture(tabId) {
+  for (const file of WEB_CAPTURE_SCRIPT_FILES) {
+    await chrome.scripting.executeScript({
+      target: { tabId },
+      files: [file]
+    });
+  }
+}
+
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  if (!Object.values(WEB_CAPTURE_MENU_IDS).includes(info.menuItemId)) {
+    return;
+  }
+
+  (async () => {
+    if (!tab?.id) {
+      throw new Error("No active tab available for capture.");
+    }
+
+    const captureMode = info.menuItemId === WEB_CAPTURE_MENU_IDS.selection ? "selection" : "article";
+
+    await injectWebCapture(tab.id);
+    await chrome.tabs.sendMessage(tab.id, {
+      type: "KG_WEB_CAPTURE_OPEN_PREVIEW",
+      captureMode,
+      selectionText: info.selectionText || "",
+      pageUrl: info.pageUrl || tab.url || ""
+    });
+
+    log("web-capture-preview-opened", {
+      tabId: tab.id,
+      captureMode,
+      url: info.pageUrl || tab.url
+    });
+  })().catch((error) => {
+    log("web-capture-preview-error", error?.message || String(error));
+  });
+});
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (!["SAVE_TRANSCRIPT", "SAVE_EMAIL_CONTENT"].includes(message?.type)) {
+  if (!SAVE_MESSAGE_TYPES.includes(message?.type)) {
     return false;
   }
 
@@ -55,7 +121,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       }
 
       const requestBody = JSON.stringify(requestPayload);
-      const endpoint = message.type === "SAVE_EMAIL_CONTENT" ? "/save-content" : "/save-transcript";
+      const endpoint = message.type === "SAVE_TRANSCRIPT" ? "/save-transcript" : "/save-content";
 
       let response;
       let data = {};

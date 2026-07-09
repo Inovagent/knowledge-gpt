@@ -63,7 +63,14 @@ function buildTranscriptBlocks(transcript, heading = TRANSCRIPT_HEADING) {
 }
 
 function getContentHeading(payload = {}) {
-  return payload.contentType === "email" ? CONTENT_HEADING : TRANSCRIPT_HEADING;
+  const headings = {
+    article: "Article",
+    email: CONTENT_HEADING,
+    selection: "Selection",
+    transcript: TRANSCRIPT_HEADING
+  };
+
+  return headings[payload.contentType] || CONTENT_HEADING;
 }
 
 module.exports = {

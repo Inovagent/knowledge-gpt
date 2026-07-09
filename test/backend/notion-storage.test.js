@@ -134,3 +134,58 @@ test("upsertTranscript creates a page when no match exists", async () => {
   assert.equal(calls.deletes.length, 0);
   assert.equal(calls.creates.length, 1);
 });
+
+test("upsertTranscript labels article bodies with an Article heading", async () => {
+  const { calls, notion } = createFakeNotion(null);
+
+  await upsertTranscript({
+    notionToken: "secret",
+    databaseId: "db",
+    propertyMapping,
+    payload: {
+      ...payload,
+      contentType: "article",
+      content: "Article body"
+    },
+    notionClient: notion
+  });
+
+  assert.equal(calls.creates[0].children[0].heading_2.rich_text[0].text.content, "Article");
+});
+
+test("upsertTranscript does not dedupe selections by URL when no external id mapping exists", async () => {
+  const existingPage = {
+    id: "existing-page",
+    url: "https://notion.so/existing-page",
+    properties: {
+      Status: {
+        type: "select",
+        select: {
+          name: "To Process"
+        }
+      }
+    }
+  };
+  const { calls, notion } = createFakeNotion(existingPage);
+
+  const result = await upsertTranscript({
+    notionToken: "secret",
+    databaseId: "db",
+    propertyMapping: {
+      ...propertyMapping,
+      videoId: ""
+    },
+    payload: {
+      ...payload,
+      contentType: "selection",
+      sourceType: "Selection",
+      content: "Selected body"
+    },
+    notionClient: notion
+  });
+
+  assert.equal(result.action, "created");
+  assert.equal(calls.queries.length, 0);
+  assert.equal(calls.deletes.length, 0);
+  assert.equal(calls.creates.length, 1);
+});
