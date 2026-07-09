@@ -69,6 +69,20 @@ test("buildMarkdownDocument uses Content heading for email captures", () => {
   assert.doesNotMatch(document, /\nvideo:\n/);
 });
 
+test("buildMarkdownDocument uses capture-specific headings for web captures", () => {
+  const articleDocument = buildMarkdownDocument({
+    ...basePayload,
+    contentType: "article"
+  });
+  const selectionDocument = buildMarkdownDocument({
+    ...basePayload,
+    contentType: "selection"
+  });
+
+  assert.match(articleDocument, /## Article\n\nFirst line/);
+  assert.match(selectionDocument, /## Selection\n\nFirst line/);
+});
+
 test("assertSafeMarkdownTarget rejects paths outside the root and non-markdown names", () => {
   const root = makeTempDir();
   try {

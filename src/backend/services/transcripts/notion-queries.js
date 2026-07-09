@@ -47,6 +47,10 @@ async function findExistingPage(notion, databaseId, payload, propertyMapping) {
     }
   }
 
+  if (payload.contentType === "selection") {
+    return null;
+  }
+
   if (propertyMapping.videoUrl && payload.url) {
     const matchByUrl = await queryByProperty(notion, databaseId, propertyMapping.videoUrl, {
       url: {

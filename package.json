@@ -26,6 +26,7 @@
     "productivity"
   ],
   "dependencies": {
+    "@mozilla/readability": "^0.6.0",
     "@notionhq/client": "^2.3.0",
     "dotenv": "^16.4.5",
     "express": "^4.21.2"

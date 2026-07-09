@@ -16,9 +16,12 @@ Most browser-side Notion integrations force you to put a secret in the extension
 - Uses a local-first architecture so browser-side code never needs your Notion secret
 - Injects a save button into YouTube's watch-page action bar
 - Injects a Gmail-style save button into open Gmail message action bars
+- Adds right-click actions for clean web-page capture and selected-text capture
 - Opens the transcript panel automatically when needed
 - Extracts transcript text across multiple known YouTube DOM variants
 - Extracts readable email content from the active Gmail message body
+- Extracts readable page content with a Reader-style parser and a high-density page-section fallback
+- Opens an editable preview before saving generic page and selected-text captures
 - Sends captured data to a local backend for persistence into Notion or local Markdown
 - Creates a new Notion page or recreates an existing one based on your dedupe mapping
 - Writes local Markdown files with YAML frontmatter when `localMarkdown` is selected
@@ -208,6 +211,10 @@ The current implementation supports:
 
 - YouTube watch pages for transcript capture
 - Gmail message views for email-content capture
+- Generic web pages through the right-click `Save clean page` action
+- Highlighted page text through the right-click `Save selected text` action
+
+Generic page capture injects the capture script only after a user invokes the context menu. It uses Mozilla Readability against a cloned document to extract the main article-like content without page chrome, CSS, scripts, nav, and ads. If Readability cannot produce enough content, it falls back to scoring likely content containers such as `article`, `main`, and high-density page sections. Both generic flows show a preview dialog where the title, source, and content can be edited before saving.
 
 ## Recommended Notion mapping
 
@@ -222,7 +229,7 @@ Recommended optional mappings:
 - a select property for `Creator / Source`
 - a select property for `Source Type`
 - a date property for the last synced timestamp
-The current YouTube flow writes the full transcript into the Notion page body as code blocks under a `Transcript` heading. The Gmail flow writes the extracted email body into the page body as code blocks under a `Content` heading.
+The current YouTube flow writes the full transcript into the Notion page body as code blocks under a `Transcript` heading. The Gmail flow writes the extracted email body into the page body as code blocks under a `Content` heading. Generic page captures use an `Article` heading, and selected-text captures use a `Selection` heading.
 
 ## Local Markdown output
 
@@ -232,7 +239,7 @@ Local Markdown files are named with this pattern:
 YYYY-MM-DD-<contentType-or-sourceType>-<slug-title>-<short-externalId>.md
 ```
 
-If a generated filename already exists, the backend writes `-2`, `-3`, and so on. Each file includes YAML frontmatter for available metadata and a Markdown body headed by `Transcript` or `Content`.
+If a generated filename already exists, the backend writes `-2`, `-3`, and so on. Each file includes YAML frontmatter for available metadata and a Markdown body headed by `Transcript`, `Content`, `Article`, or `Selection`.
 
 ## API
 
