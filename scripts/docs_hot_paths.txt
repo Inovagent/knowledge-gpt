@@ -1,0 +1,32 @@
+# Docs "hot paths" - code paths that almost always require a documentation check.
+#
+# This is the shared trigger list. The Codex Stop hook, git commit-msg gate, and
+# CI gate all read this file through scripts/docs_impact_guard.sh.
+#
+# Keep this list high-signal. If the guard fires on doc-irrelevant changes more
+# than about 1 in 5 times, narrow this list before contributors learn to bypass
+# it reflexively.
+
+# Backend public API surface.
+^src/backend/routes/
+
+# Backend env and local configuration contract.
+^src/backend/config/env\.js$|^\.env\.example$
+
+# Storage destination behavior, Notion persistence, and local Markdown output.
+^src/backend/services/storage/
+
+# Capture payload normalization and Notion field/block mapping.
+^src/backend/services/transcripts/
+
+# Extension browser capability surface.
+^extension/manifest\.json$
+
+# Browser capture flows, context menus, shared extension settings, and backend URL handling.
+^extension/scripts/(background\.js|content/|shared/)
+
+# User-facing extension configuration surface.
+^extension/pages/options/
+
+# Dependency and script surface contributors rely on.
+^package\.json$

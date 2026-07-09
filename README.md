@@ -65,7 +65,12 @@ Most browser-side Notion integrations force you to put a secret in the extension
 ```bash
 npm install
 cp .env.example .env
+bash scripts/install_hooks.sh
 ```
+
+The hook installer adds the local Docs Impact git hooks for this clone: an
+advisory `pre-commit` reminder and a blocking `commit-msg` gate when documented
+hot paths change without a docs update or `Docs-Impact: none - <reason>` trailer.
 
 ### 2. Choose a storage destination
 
@@ -338,6 +343,19 @@ Run tests:
 ```bash
 npm test
 ```
+
+Run the documentation guardrails directly:
+
+```bash
+bash scripts/docs_impact_guard.sh --worktree
+bash scripts/docs_consistency_check.sh
+```
+
+## Specs
+
+Durable product and implementation specs live in `specs/`. Start with
+`specs/README.md` for the format and `specs/0001-capture-and-storage-platform.md`
+for the current capture and storage platform contract.
 
 ## Publishing notes
 
