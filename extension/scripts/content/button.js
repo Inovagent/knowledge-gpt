@@ -74,6 +74,15 @@ async function withTranscriptExtraction() {
   }
 }
 
+async function sendRuntimeMessage(message) {
+  const runtime = globalThis.chrome?.runtime;
+  if (typeof runtime?.sendMessage !== "function") {
+    throw new Error("Chrome extension messaging is unavailable. Reload the unpacked extension, refresh YouTube, and try again.");
+  }
+
+  return runtime.sendMessage(message);
+}
+
 async function saveTranscript() {
   log("save-transcript:clicked");
 
@@ -108,7 +117,7 @@ async function saveTranscript() {
       transcriptLength: payload.transcript.length
     });
 
-    const response = await chrome.runtime.sendMessage({
+    const response = await sendRuntimeMessage({
       type: "SAVE_TRANSCRIPT",
       payload
     });
