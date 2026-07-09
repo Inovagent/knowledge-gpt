@@ -1,3 +1,7 @@
+function normalizeStorageDestination(storageDestination) {
+  return String(storageDestination || "").trim();
+}
+
 function normalizePropertyMapping(propertyMapping = {}) {
   return {
     title: String(propertyMapping.title || "").trim(),
@@ -10,6 +14,7 @@ function normalizePropertyMapping(propertyMapping = {}) {
 }
 
 function buildTranscriptPayload(body, defaultDatabaseId) {
+  const storageDestination = normalizeStorageDestination(body.storageDestination);
   const propertyMapping = normalizePropertyMapping(body.propertyMapping);
   const content = String(body.content || body.transcript || "").trim();
   const title = String(body.title || "").trim();
@@ -20,6 +25,11 @@ function buildTranscriptPayload(body, defaultDatabaseId) {
   const contentType = String(body.contentType || (body.transcript ? "transcript" : "content")).trim();
 
   return {
+    storageDestination,
+    requestOptions: {
+      databaseId: String(body.databaseId || defaultDatabaseId || "").trim(),
+      propertyMapping
+    },
     databaseId: String(body.databaseId || defaultDatabaseId || "").trim(),
     propertyMapping,
     payload: {
@@ -39,6 +49,7 @@ function buildTranscriptPayload(body, defaultDatabaseId) {
 }
 
 module.exports = {
+  normalizeStorageDestination,
   normalizePropertyMapping,
   buildTranscriptPayload
 };

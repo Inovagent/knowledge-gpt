@@ -1,4 +1,5 @@
 const DEFAULT_SETTINGS = {
+  storageDestination: "",
   backendUrl: "http://127.0.0.1:8787",
   databaseId: "",
   propertyMapping: {
@@ -15,6 +16,7 @@ function mergeSettings(stored = {}) {
   return {
     ...DEFAULT_SETTINGS,
     ...stored,
+    storageDestination: String(stored.storageDestination || DEFAULT_SETTINGS.storageDestination).trim(),
     propertyMapping: {
       ...DEFAULT_SETTINGS.propertyMapping,
       ...(stored.propertyMapping || {})

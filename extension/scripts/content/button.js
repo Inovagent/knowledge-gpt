@@ -15,6 +15,14 @@ const COPY_BUTTON_LABELS = {
 
 const COPY_SUCCESS_RESET_MS = 2000;
 
+function getTranscriptSavedDetail(responseData) {
+  if (responseData.storageDestination === "localMarkdown") {
+    return "Transcript saved locally.";
+  }
+
+  return `Transcript ${responseData.action} in Notion.`;
+}
+
 function setActionButtonState(buttonId, state, detail, icons, labels) {
   const button = document.getElementById(buttonId);
   if (!button) {
@@ -120,7 +128,7 @@ async function saveTranscript() {
       title: payload.title,
       url: payload.url
     });
-    setSaveButtonState("saved", `Transcript ${response.data.action} in Notion.`);
+    setSaveButtonState("saved", getTranscriptSavedDetail(response.data));
   } catch (error) {
     log("save-transcript:error", error);
     setSaveButtonState("error", error?.message || "Failed to save transcript.");
@@ -211,7 +219,7 @@ async function syncButtonStateForCurrentVideo() {
 
   const processed = await isVideoProcessed(videoId);
   if (processed) {
-    setSaveButtonState("saved", "Transcript already saved for this video.");
+    setSaveButtonState("saved", "Transcript already saved.");
     return;
   }
 

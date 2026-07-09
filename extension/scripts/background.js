@@ -24,10 +24,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
       const settings = await getSettings();
       log("settings-loaded", {
+        storageDestination: settings.storageDestination,
         backendUrl: settings.backendUrl,
         databaseIdPresent: Boolean(settings.databaseId),
         propertyMapping: settings.propertyMapping
       });
+
+      if (!settings.storageDestination) {
+        throw new Error("Choose a storage destination in the extension options before saving.");
+      }
 
       const candidateBaseUrls = buildCandidateUrls(settings.backendUrl);
 
@@ -35,11 +40,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         throw new Error("Set a backend URL in the extension options.");
       }
 
-      const requestBody = JSON.stringify({
+      const requestPayload = {
         ...message.payload,
-        databaseId: settings.databaseId,
-        propertyMapping: settings.propertyMapping
-      });
+        storageDestination: settings.storageDestination
+      };
+
+      if (settings.storageDestination === "notion") {
+        requestPayload.databaseId = settings.databaseId;
+        requestPayload.propertyMapping = settings.propertyMapping;
+      }
+
+      const requestBody = JSON.stringify(requestPayload);
       const endpoint = message.type === "SAVE_EMAIL_CONTENT" ? "/save-content" : "/save-transcript";
 
       let response;
@@ -50,6 +61,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         const requestUrl = `${baseUrl}${endpoint}`;
         log("request-start", {
           requestUrl,
+          storageDestination: settings.storageDestination,
           databaseIdPresent: Boolean(settings.databaseId),
           externalId: message.payload?.externalId || message.payload?.videoId,
           title: message.payload?.title,

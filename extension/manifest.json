@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Knowledge GPT",
   "version": "0.5.0",
-  "description": "Save information from supported sites like YouTube and Gmail into Notion.",
+  "description": "Save information from supported sites like YouTube and Gmail into Notion or local Markdown.",
   "permissions": ["storage"],
   "host_permissions": [
     "https://www.youtube.com/*",
