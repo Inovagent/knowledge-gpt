@@ -1,7 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Knowledge GPT",
-  "version": "0.5.0",
+  "version": "0.6.0",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwQt9uR0fpZpNLZb3HXNBzmXGbajIh7op3xxX+XG0/7iE46Wo+Ycxc9kStrhAub/tXUAZXco8eYAuGDMGDoGOsa2eUfR/9eBXBe73LlPICZ3eeAbhCYuFkGBd7HvWyUlJOS7RCJJ/o9HpEmcC8/yfL/Jj5V3q8wQVozP7TThpjNMa9z0NosURjPaRyH6Pu3Umxa5DdFd7bvPuKcYW5tEyxmOXTkykmOCcSXbSI3IsT889Ds8Ak4zlFz7Cr8JbH/A/1nNmG2nMzaO6rnWwquBoQ05jcb2Cdn/tHCEKFlKwHrfpKfuThXvV3JulDs6x8oXsEEbo1a6LVy/2+nhYafKmBwIDAQAB",
   "description": "Save information from supported sites like YouTube and Gmail into Notion or local Markdown.",
   "permissions": ["storage"],
   "host_permissions": [
@@ -12,6 +13,9 @@
   ],
   "background": {
     "service_worker": "scripts/background.js"
+  },
+  "action": {
+    "default_title": "Knowledge GPT settings"
   },
   "content_scripts": [
     {

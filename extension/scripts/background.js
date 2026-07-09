@@ -9,6 +9,10 @@ async function getSettings() {
   return mergeSettings(stored);
 }
 
+chrome.action.onClicked.addListener(() => {
+  chrome.runtime.openOptionsPage();
+});
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (!["SAVE_TRANSCRIPT", "SAVE_EMAIL_CONTENT"].includes(message?.type)) {
     return false;

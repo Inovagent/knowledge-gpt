@@ -1,6 +1,6 @@
 {
   "name": "knowledge-gpt",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Chromium extension and local backend for saving information from supported sites into Notion.",
   "license": "MIT",
   "files": [
