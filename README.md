@@ -188,6 +188,8 @@ For local Markdown, the browser never sends a folder, filename, extension, or su
 3. Click `Load unpacked`
 4. Select the repository's `extension/` directory
 
+The manifest pins a stable unpacked-extension ID with a public `key`, so saved options survive normal extension reloads and loading the extension from another local workspace path.
+
 ### 6. Configure the extension
 
 Open the extension options page and set:
@@ -197,6 +199,8 @@ Open the extension options page and set:
 - For Notion: Notion database ID, or leave it blank if you set `DEFAULT_NOTION_DATABASE_ID`
 - For Notion: property names for the fields you want this integration to populate
 - For Local Markdown: make sure `/health` reports that `LOCAL_MARKDOWN_ROOT` is set
+
+After the extension is loaded, clicking the Knowledge GPT toolbar icon opens this options page directly.
 
 ## Current scope
 
