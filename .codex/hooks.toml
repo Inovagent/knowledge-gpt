@@ -1,0 +1,15 @@
+# Codex command hooks.
+#
+# Codex reads command hooks from hooks.toml / hooks.json or an inline [hooks]
+# block in config.toml. This is the thin adapter; all logic lives in the one
+# canonical guard script so the Codex layer stays a few lines.
+#
+# Caveat: Codex currently runs *command* hooks only (prompt/agent handlers are
+# parsed but skipped), and its Stop output is surfaced less forcibly than Claude
+# Code's exit-2. Treat this as a fast in-session reminder; the git commit-msg
+# gate and CI are the actual guarantee.
+
+[[hooks.Stop]]
+[[hooks.Stop.hooks]]
+type = "command"
+command = "bash scripts/docs_impact_guard.sh"

@@ -1,0 +1,46 @@
+name: Docs Impact
+
+# Tool-agnostic merge gate: whoever (or whatever) made the change converges
+# here. Two jobs:
+#   1. docs-impact   hot paths changed => a doc changed OR the PR body declares
+#                    "Docs impact: none - <reason>".
+#   2. consistency   mechanical assertions that docs describe things that exist.
+# Both read the same scripts the local hooks read (scripts/docs_*), so the
+# enforcement can never drift between local and CI.
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  docs-impact:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: 'Detect "Docs impact: none - reason" declaration in PR body'
+        id: decl
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          if printf '%s' "$PR_BODY" | grep -qiE 'docs[ -]?impact:\s*none\s*-\s*\S'; then
+            echo "declared=1" >> "$GITHUB_OUTPUT"
+          else
+            echo "declared=0" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Docs Impact gate
+        env:
+          BASE_REF: origin/${{ github.event.pull_request.base.ref }}
+          DOCS_IMPACT_DECLARED: ${{ steps.decl.outputs.declared == '1' && 'yes' || '' }}
+        run: bash scripts/docs_impact_guard.sh --ci
+
+  consistency:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Docs consistency checks
+        run: bash scripts/docs_consistency_check.sh
