@@ -1,0 +1,5 @@
+# category	changed source ERE	canonical document ERE
+backend API	^src/backend/routes/	^(AGENTS\.md$|specs/0001-capture-and-storage-platform\.md$|docs/adr/)
+storage and normalization	^src/backend/services/	^(README\.md$|specs/0001-capture-and-storage-platform\.md$|docs/adr/)
+extension permissions and capture	^extension/	^(AGENTS\.md$|specs/0001-capture-and-storage-platform\.md$|docs/adr/)
+configuration	^(src/backend/config/|\.env\.example$)	^README\.md$

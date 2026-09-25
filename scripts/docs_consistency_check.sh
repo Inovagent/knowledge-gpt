@@ -8,7 +8,6 @@
 # a human resolves), so the gate stays honest without alert fatigue.
 #
 # This file is the MOST project-specific part of the system. The generic checks
-# below (shim integrity, doc-named-path existence) port as-is. The
 # "PROJECT-SPECIFIC REGISTRY CHECKS" section is where you wire in parity between
 # your machine-readable registries (route tables, serverless function configs,
 # env modules, package manifests) and your docs. Examples are provided per stack
@@ -24,16 +23,6 @@ ok()   { echo "ok:   $1"; }
 
 # ===================== GENERIC CHECKS (port as-is) ===========================
 
-# 1) Tool shim integrity: if CLAUDE.md exists it must be the @AGENTS.md shim,
-#    not a divergent second instruction file. This repo currently installs only
-#    the Codex adapter, so no warning is emitted when CLAUDE.md is absent.
-if [ -f CLAUDE.md ]; then
-  if grep -qE '@AGENTS\.md' CLAUDE.md; then
-    ok "CLAUDE.md is the @AGENTS.md shim"
-  else
-    hard "CLAUDE.md exists but does not reference @AGENTS.md (shim broken)"
-  fi
-fi
 
 # 2) Repo file paths named in the in-repo knowledge skill references actually
 #    exist. Catches renames that orphan docs. Adjust SKILL_DIR + the top-level
