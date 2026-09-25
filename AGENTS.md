@@ -131,3 +131,19 @@ This repo now has a model-agnostic docs gate:
 
 The local hook and CI allow an intentional no-docs change only when the author
 declares `Docs impact: none - <reason>`.
+
+## Documentation gate evidence
+
+`scripts/docs_contract_map.tsv` maps high-risk source categories to their canonical
+documents; `scripts/docs_hot_paths.txt` selects candidate changes. Every affected
+mapped category needs a changed, still-present document or a specific
+`Docs-Impact: none — <reason>` exception. Other hot paths use the fallback document
+set. Path evidence is not proof that the right fact changed; review semantics and
+contracts outside the trigger list too. Unrelated edits need no cosmetic doc churn.
+
+Commit and CI modes share the same reason parser; CI reads the raw PR body through
+`DOCS_IMPACT_TEXT` and errors on an unresolved merge base. A final chat summary is
+not Git/CI input. `--worktree` is a read-only local check, `--staged` is advisory,
+and the Stop reminder is keyed to actual changed content and resets when clean.
+Run `python3 scripts/test_docs_impact.py` for offline fixtures; Git and Python 3
+are required for these tests, not an application service or provider connection.
